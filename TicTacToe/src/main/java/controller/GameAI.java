@@ -18,26 +18,34 @@ public class GameAI {
     
     private Game game = null;
 
-    // O is the invitee who is always the robot 
+    // O is the invitee who is always the robot
     private static Square[][] patternPriority = new Square[][] {
-        {O,O,O,O,O},    // Win
-        {O,X,X,X,X,O},  // Block
-        {O,X,X,X,e},    // Block
-        {e,X,X,X,O},    // Block
-        {e,O,O,O,O,e},  // 4 in a row with blanks on the sides
-        {O,O,O,O,e},    // 4 in a row with blank on one side
-        {e,O,O,O,O},    // 4 in a row with blank on other side
-        {e,O,O,O,e},    // etc
-        {e,O,O,e},
-        {O,O,O,e},
-        {e,O,O,O},
-        {e,O,O,e},
-        {e,O,O},
-        {O,O,e},
-        {e,O,e},
-        {O,e},
-        {e,O},
-        {O},
+            {O,O,O,O,O},    // Win
+            {O,X,X,X,X,O},  // Block
+            {O,X,X,X,e},    // Block
+            {X,X,X,O,X}, // Block
+            {X,O,X,X,X}, // Block
+            {O,X,X,X,e},    // Block
+            {e,X,X,X,O},    // Block
+            {X,X,O,e,X}, // Block
+            {X,X,e,O,X}, // Block
+            {X,e,O,X,X}, // Block
+            {X,O,e,X,X}, // Block
+            {X,e,O,e,X}, // Block
+            {e,O,O,O,O,e},  // 4 in a row with blanks on the sides
+            {O,O,O,O,e},    // 4 in a row with blank on one side
+            {e,O,O,O,O},    // 4 in a row with blank on other side
+            {e,O,O,O,e},    // etc
+            {e,O,O,e},
+            {O,O,O,e},
+            {e,O,O,O},
+            {e,O,O,e},
+            {e,O,O},
+            {O,O,e},
+            {e,O,e},
+            {O,e},
+            {e,O},
+            {O},
     };
     
     GameAI(Game game) {
