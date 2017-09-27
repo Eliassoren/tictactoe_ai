@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="nb"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TicTacToe</a> &gt; <a href="index.source.html" class="el_package">controller</a> &gt; <span class="el_source">GameController.java</span></div><h1>GameController.java</h1><pre class="source lang-java linenums">package controller;
+
+import data.Game;
+import data.Position;
+import data.Square;
+import repo.GameRepository;
+
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+/**
+ * @author nilstes
+ */
+public class GameController {
+
+<span class="fc" id="L27">    private static final Logger log = Logger.getLogger(GameController.class.getName());</span>
+<span class="fc" id="L28">    private static Random rnd = new SecureRandom();  </span>
+    
+    private GameRepository repo;
+
+<span class="fc" id="L32">    public GameController(GameRepository repo) {</span>
+<span class="fc" id="L33">        this.repo = repo;</span>
+<span class="fc" id="L34">    }</span>
+    
+    public Game createGame(String inviter, String invitee, int squares) {
+<span class="fc" id="L37">        String gameId = new BigInteger(128, rnd).toString(36);</span>
+<span class="fc" id="L38">        Game game = new Game(gameId, inviter, invitee, squares);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        game.setTurn(rnd.nextBoolean() ? inviter : invitee);</span>
+<span class="fc" id="L40">        repo.addGame(game);</span>
+            
+        // Robot game?
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if(game.getTurn().equals(&quot;&quot;)) {</span>
+<span class="nc" id="L44">            game.setInviteAccepted(true);</span>
+<span class="nc" id="L45">            game.addMove(squares/2, squares/2, &quot;&quot;); // Middle of board</span>
+        }
+<span class="fc" id="L47">        return game;</span>
+    }
+        
+    public Game move(String gameId, String player, int x, int y) {
+<span class="fc" id="L51">        Game game = getGame(gameId);</span>
+        
+        // Right turn?
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        if(!player.equals(game.getTurn())) {</span>
+<span class="fc" id="L55">            log.warning(&quot;Wrong turn&quot;);</span>
+<span class="fc" id="L56">            throw new ClientErrorException(&quot;Ikke denne spillerens tur&quot;, Response.Status.BAD_REQUEST);</span>
+        }
+        
+        // Out of range?
+<span class="pc bpc" id="L60" title="3 of 8 branches missed.">        if(x &lt; 0 || y &lt; 0 || x &gt;= game.getSquares() || y &gt;= game.getSquares()) {</span>
+<span class="fc" id="L61">            log.log(Level.WARNING, &quot;Position out of range: {0},{1}&quot;, new Object[]{x, y});</span>
+<span class="fc" id="L62">            throw new ClientErrorException(&quot;Posisjon er ugyldig: &quot; + x + &quot;,&quot; + y, Response.Status.BAD_REQUEST);</span>
+        }
+
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if(game.getBoard()[y][x] != Square.e){</span>
+<span class="fc" id="L66">            throw new ClientErrorException(&quot;Posisjon tatt fra før&quot;, Response.Status.BAD_REQUEST);</span>
+        }
+
+<span class="fc" id="L69">        GameAI ai =  new GameAI(game);</span>
+        
+        // Make move
+<span class="fc" id="L72">        game.addMove(x, y, player);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if(ai.isWin(x, y)) {</span>
+<span class="nc" id="L74">            game.setWinner(player);</span>
+        }
+    
+        // Robot move?
+<span class="pc bpc" id="L78" title="3 of 6 branches missed.">        if(game.getWinner() == null &amp;&amp; game.getNumMoves() &lt; game.getSquares()*game.getSquares() &amp;&amp; game.getTurn().equals(&quot;&quot;)) {</span>
+<span class="nc" id="L79">            List&lt;Position&gt; positions = ai.getBestMoves();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            if(positions.size() == 0) {</span>
+<span class="nc" id="L81">                throw new ServerErrorException(&quot;Couldn't find move&quot;, Status.INTERNAL_SERVER_ERROR);</span>
+            }
+<span class="nc" id="L83">            Position pos = positions.get(rnd.nextInt(positions.size()));</span>
+<span class="nc" id="L84">            game.addMove(pos.x(), pos.y(), &quot;&quot;);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if(ai.isWin(pos.x(), pos.y())) {</span>
+<span class="nc" id="L86">                game.setWinner(&quot;&quot;);</span>
+            }
+        }
+        
+<span class="fc" id="L90">        return game;</span>
+    }
+
+    public Game getGame(String gameId) {
+<span class="fc" id="L94">        Game game = repo.getGame(gameId);</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if(game == null) {</span>
+<span class="fc" id="L96">            log.log(Level.WARNING, &quot;Game not found: {0}&quot;, gameId);</span>
+<span class="fc" id="L97">            throw new NotFoundException(&quot;Spill med id &quot; + gameId + &quot; ble ikke funnet&quot;);</span>
+        }
+<span class="fc" id="L99">        return game;</span>
+    }
+
+    public List&lt;Game&gt; getInvites(String userName) {
+<span class="nc" id="L103">        return new ArrayList&lt;Game&gt;(); // todo</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>
