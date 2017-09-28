@@ -22,9 +22,9 @@ public class GameAI {
     private static Square[][] patternPriority = new Square[][] {
             {O,O,O,O,O},    // Win
             {O,X,X,X,X,O},  // Block
-            {O,X,X,X,e},    // Block
             {X,X,X,O,X}, // Block
             {X,O,X,X,X}, // Block
+            {O,X,X,X,e},    // Block
             {O,X,X,X,e},    // Block
             {e,X,X,X,O},    // Block
             {X,X,O,e,X}, // Block
